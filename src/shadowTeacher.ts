@@ -54,8 +54,7 @@ export class ShadowTeacher {
     private async _provideShadowHint(editor: vscode.TextEditor) {
         const context = await ContextEngine.getContext(editor);
         
-        // Use a more robust prompt format
-        const prompt = "You are Hoot's 'Shadow Teacher'. You provide short, Socratic hints or questions directly in the code.\n" +
+        const prompt = "You are Hoot's 'Shadow Teacher'. You provide Socratic mentoring directly in the code.\n" +
             "CONTEXT:\n" +
             "File: " + context.filename + "\n" +
             "Relevant Scope:\n" +
@@ -64,34 +63,49 @@ export class ShadowTeacher {
             "```\n" +
             "Current Line Number: " + context.currentLine + "\n\n" +
             "TASK:\n" +
-            "Analyze the code at line " + context.currentLine + ". \n" +
-            "If there is a learning opportunity (e.g., a complex block that could be explained, a non-idiomatic pattern, or a chance to ask 'why' a specific choice was made), provide a ONE-SENTENCE Socratic question or hint.\n" +
-            "The hint will be shown at the end of the line.\n\n" +
+            "Analyze the code at line " + context.currentLine + ".\n" +
+            "Provide a response in exactly this JSON format:\n" +
+            "{\n" +
+            "  \"tease\": \"[A short insight + a Socratic question]\",\n" +
+            "  \"answer\": \"[The detailed explanation/answer to the question]\"\n" +
+            "}\n\n" +
             "RULES:\n" +
-            "1. KEEP IT SHORT. Max 15 words.\n" +
-            "2. DO NOT GIVE ANSWERS. Ask a question or provide a nudge.\n" +
-            "3. If the code is simple/trivial, return exactly \"NONE\".\n" +
-            "4. Focus on teaching concepts related to the language or logic.\n\n" +
-            "HINT:";
+            "1. TEASE MUST BE SHORT (max 12 words). It appears at the end of the line.\n" +
+            "2. ANSWER is shown when the user hovers. It should be clear and helpful.\n" +
+            "3. If the code is trivial, return {\"tease\": \"NONE\", \"answer\": \"\"}.\n" +
+            "4. NEVER give the answer in the tease.\n\n" +
+            "RESPONSE:";
 
         try {
             const response = await this._geminiService.ask(prompt);
             
-            if (response && response.trim() !== "NONE" && !response.includes("error")) {
-                this._applyHint(editor, context.currentLine, response.trim());
+            // Try to parse JSON from the response (Gemini might wrap it in code blocks)
+            const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
+            const data = JSON.parse(jsonStr);
+            
+            if (data.tease && data.tease !== "NONE" && !response.includes("error")) {
+                this._applyHint(editor, context.currentLine, data.tease, data.answer);
             }
         } catch (e) {
             console.error("Shadow hint failed", e);
         }
     }
 
-    private _applyHint(editor: vscode.TextEditor, line: number, text: string) {
+    private _applyHint(editor: vscode.TextEditor, line: number, tease: string, answer: string) {
         const range = new vscode.Range(line, 0, line, 1000);
+        
+        const hoverMessage = new vscode.MarkdownString();
+        hoverMessage.appendMarkdown(`### 🦉 Hoot's Lesson\n\n`);
+        hoverMessage.appendMarkdown(`${answer}\n\n`);
+        hoverMessage.appendMarkdown(`--- \n*Press Escape to clear this hint*`);
+        hoverMessage.isTrusted = true;
+
         const decoration: vscode.DecorationOptions = {
             range,
+            hoverMessage,
             renderOptions: {
                 after: {
-                    contentText: "🦉 Hoot: " + text
+                    contentText: " 🦉 " + tease
                 }
             }
         };
