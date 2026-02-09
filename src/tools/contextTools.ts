@@ -1,9 +1,19 @@
 import * as vscode from 'vscode';
 import { SchemaType, Tool } from '@google/generative-ai';
+import { ProjectIndexer } from '../projectIndexer';
 
 export const contextTools: Tool[] = [
     {
         functionDeclarations: [
+            {
+                name: "get_project_summary",
+                description: "Returns a high-level map of the project structure and contents of key configuration files. Use this to understand the project architecture.",
+                parameters: {
+                    type: SchemaType.OBJECT,
+                    properties: {},
+                    required: []
+                }
+            },
             {
                 name: "read_active_file",
                 description: "Reads the content of the file currently open in the active editor. Use this to understand the code the user is working on.",
@@ -44,12 +54,46 @@ export const contextTools: Tool[] = [
                     properties: {},
                     required: []
                 }
+            },
+            {
+                name: "read_file_content",
+                description: "Reads the content of a specific file in the workspace. Use this to understand dependencies or related files.",
+                parameters: {
+                    type: SchemaType.OBJECT,
+                    properties: {
+                        path: {
+                            type: SchemaType.STRING,
+                            description: "The relative path of the file to read."
+                        }
+                    },
+                    required: ["path"]
+                }
             }
         ]
     }
 ];
 
 export const contextFunctions = {
+    get_project_summary: async () => {
+        return { summary: await ProjectIndexer.getProjectMap() };
+    },
+
+    read_file_content: async (args: { path: string }) => {
+        try {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders) { return { error: "No workspace folder open." }; }
+            
+            const uri = vscode.Uri.joinPath(workspaceFolders[0].uri, args.path);
+            const content = await vscode.workspace.fs.readFile(uri);
+            return {
+                path: args.path,
+                content: Buffer.from(content).toString('utf8')
+            };
+        } catch (error: any) {
+            return { error: `Failed to read file: ${error.message}` };
+        }
+    },
+
     read_diagnostics: async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -67,6 +111,7 @@ export const contextFunctions = {
             }))
         };
     },
+
     read_active_file: async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
