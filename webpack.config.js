@@ -3,6 +3,7 @@
 'use strict';
 
 const path = require('path');
+const webpack = require('webpack');
 
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
@@ -76,6 +77,12 @@ const webviewConfig = {
       }
     ]
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify({}),
+      'process': JSON.stringify({ env: {} })
+    })
+  ],
   devtool: 'nosources-source-map',
 };
 
