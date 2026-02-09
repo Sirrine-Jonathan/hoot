@@ -35,6 +35,24 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 				case 'ready':
 					this._checkApiKeyStatus();
 					break;
+				case 'getModels':
+					{
+						const service = await this._getGeminiService();
+						if (service) {
+							const models = await service.getAvailableModels();
+							webviewView.webview.postMessage({ type: 'modelsList', models });
+						}
+						break;
+					}
+				case 'switchModel':
+					{
+						const service = await this._getGeminiService();
+						if (service) {
+							await service.switchModel(data.modelName);
+							webviewView.webview.postMessage({ type: 'chatResponse', text: `Switched to model: ${data.modelName}. Conversation history cleared.` });
+						}
+						break;
+					}
 				case 'chat':
 					{
 						const service = await this._getGeminiService();

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Send, User, Bot, Key, Settings } from 'lucide-react';
+import { Send, User, Bot, Key, Settings, Brain } from 'lucide-react';
 
 interface Message {
     role: 'user' | 'model';
@@ -21,6 +21,8 @@ export const ChatApp: React.FC = () => {
     const [input, setInput] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
     const [hasApiKey, setHasApiKey] = React.useState<boolean | null>(null);
+    const [models, setModels] = React.useState<{name: string, displayName: string}[]>([]);
+    const [selectedModel, setSelectedModel] = React.useState('models/gemini-2.0-flash');
 
     const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -42,6 +44,12 @@ export const ChatApp: React.FC = () => {
                     break;
                 case 'apiKeyStatus':
                     setHasApiKey(message.hasKey);
+                    if (message.hasKey) {
+                        vscode?.postMessage({ command: 'getModels' });
+                    }
+                    break;
+                case 'modelsList':
+                    setModels(message.models);
                     break;
             }
         };
@@ -67,6 +75,12 @@ export const ChatApp: React.FC = () => {
 
     const setApiKey = () => {
         vscode?.postMessage({ command: 'setApiKey' });
+    };
+
+    const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newModel = e.target.value;
+        setSelectedModel(newModel);
+        vscode?.postMessage({ command: 'switchModel', modelName: newModel });
     };
 
     if (hasApiKey === false) {
@@ -107,7 +121,32 @@ export const ChatApp: React.FC = () => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '10px', boxSizing: 'border-box' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: '5px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1, minWidth: 0 }}>
+                    <Brain size={14} style={{ opacity: 0.7, flexShrink: 0 }} />
+                    <select 
+                        value={selectedModel}
+                        onChange={handleModelChange}
+                        style={{ 
+                            fontSize: '0.85em',
+                            padding: '2px 4px',
+                            borderRadius: '4px',
+                            border: '1px solid var(--vscode-input-border)',
+                            backgroundColor: 'var(--vscode-input-background)',
+                            color: 'var(--vscode-input-foreground)',
+                            width: '100%',
+                            outline: 'none'
+                        }}
+                    >
+                        {models.length > 0 ? (
+                            models.map(m => (
+                                <option key={m.name} value={m.name}>{m.displayName}</option>
+                            ))
+                        ) : (
+                            <option value="models/gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        )}
+                    </select>
+                </div>
                 <button 
                     onClick={setApiKey}
                     title="Change API Key"
@@ -116,12 +155,15 @@ export const ChatApp: React.FC = () => {
                         border: 'none', 
                         color: 'var(--vscode-foreground)', 
                         cursor: 'pointer',
-                        opacity: 0.6
+                        opacity: 0.6,
+                        display: 'flex',
+                        alignItems: 'center'
                     }}
                 >
                     <Settings size={16} />
                 </button>
             </div>
+
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '10px', paddingRight: '5px' }}>
                 {messages.map((msg, i) => (
                     <div key={i} style={{ 
