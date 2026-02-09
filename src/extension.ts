@@ -46,6 +46,36 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('hoot.checkApiKey', async () => {
+			const apiKey = await getApiKey(context);
+			if (apiKey) {
+				vscode.window.showInformationMessage(`API Key is set (Length: ${apiKey.length}).`);
+			} else {
+				vscode.window.showWarningMessage('API Key is NOT set.');
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('hoot.testGemini', async () => {
+			const service = await getGeminiService();
+			if (!service) {
+				vscode.window.showErrorMessage('Gemini Service not initialized. Please set API Key.');
+				return;
+			}
+
+			vscode.window.withProgress({
+				location: vscode.ProgressLocation.Notification,
+				title: "Testing Gemini Connection...",
+				cancellable: false
+			}, async () => {
+				const response = await service.ask('Hello, are you there? Respond with "Yes, I am Hoot!" if you can hear me.');
+				vscode.window.showInformationMessage(`Gemini Response: ${response}`);
+			});
+		})
+	);
 }
 
 export async function getApiKey(context: vscode.ExtensionContext): Promise<string | undefined> {

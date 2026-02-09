@@ -41,6 +41,10 @@
       {
         "command": "hoot.checkApiKey",
         "title": "Hoot: Check API Key Status"
+      },
+      {
+        "command": "hoot.testGemini",
+        "title": "Hoot: Test Gemini Connection"
       }
     ]
   },
