@@ -21,31 +21,16 @@ Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent
 
 ## 🛠️ Getting Started
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [VS Code](https://code.visualstudio.com/)
-- A [Gemini API Key](https://aistudio.google.com/app/apikey)
-
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Sirrine-Jonathan/hoot.git
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Compile the extension:
-   ```bash
-   npm run compile
-   ```
+### Beta Installation (VSIX)
+1. Download the latest `hoot-x.x.x.vsix` file.
+2. In VS Code, go to the **Extensions** view (`Ctrl+Shift+X`).
+3. Click the **...** (Views and More Actions) at the top right.
+4. Select **Install from VSIX...** and choose the downloaded file.
 
 ### Setup Hoot
-1. Open Hoot in VS Code.
-2. Press `F5` to launch the **Extension Development Host**.
-3. In the new window, open the Command Palette (`Ctrl+Shift+P`) and run:
-   **"Hoot: Set Gemini API Key"**
-4. Enter your key and start chatting with Hoot in the sidebar!
+1. Open the Hoot sidebar (🦉 icon).
+2. Click **Set API Key** (you'll need a [Gemini API Key](https://aistudio.google.com/app/apikey)).
+3. Start coding! Hoot will provide Socratic hints as you work.
 
 ## 🧪 Development & Testing
 

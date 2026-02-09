@@ -1,6 +1,7 @@
 {
   "name": "hoot",
   "displayName": "hoot",
+  "publisher": "Sirrine-Jonathan",
   "description": " An AI-powered agent to help learn coding.",
   "version": "0.0.1",
   "engines": {
