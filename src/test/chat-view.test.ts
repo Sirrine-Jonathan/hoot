@@ -19,6 +19,7 @@ suite('Chat View Provider Test Suite', () => {
 				},
 				options: {},
 				html: '',
+				asWebviewUri: (uri: any) => uri,
                 postMessage: async (message: any) => {
                     if (message.type === 'chatResponse') {
                         messageReceived = true;
@@ -53,6 +54,7 @@ suite('Chat View Provider Test Suite', () => {
 				},
 				options: {},
 				html: '',
+				asWebviewUri: (uri: any) => uri,
                 postMessage: async (message: any) => {
                     if (message.type === 'chatResponse') {
                         lastResponse = message.text;

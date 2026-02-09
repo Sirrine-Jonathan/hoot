@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel, ChatSession } from "@google/generative-ai";
+import { tutorialTools, toolFunctions } from "./tools/tutorialTools";
 
 export class GeminiService {
     private _genAI?: GoogleGenerativeAI;
@@ -28,8 +29,9 @@ export class GeminiService {
             model: modelName,
             systemInstruction: {
                 role: "system",
-                parts: [{ text: "You are Hoot, an AI-powered Teacher Agent for VS Code. Your goal is to guide students using the Socratic method. Never give the full answer immediately. Instead, ask guiding questions, provide hints, and explain the 'why' behind concepts. Encourage the student and help them break down complex problems into smaller steps." }]
-            }
+                parts: [{ text: "You are Hoot, an AI-powered Teacher Agent for VS Code. Your goal is to guide students using the Socratic method. Never give the full answer immediately. Instead, ask guiding questions, provide hints, and explain the 'why' behind concepts. Encourage the student and help them break down complex problems into smaller steps. When a student explicitly asks for a tutorial or a comprehensive guide, use the 'create_tutorial' tool to generate a markdown file." }]
+            },
+            tools: tutorialTools
         }, { apiVersion: 'v1beta' });
     }
 
@@ -67,8 +69,34 @@ export class GeminiService {
 
     async ask(prompt: string): Promise<string> {
         try {
-            const result = await this._chat.sendMessage(prompt);
-            const response = await result.response;
+            let result = await this._chat.sendMessage(prompt);
+            let response = await result.response;
+            let calls = response.functionCalls();
+
+            while (calls && calls.length > 0) {
+                const call = calls[0]; // Handle one call at a time for simplicity in this loop
+                const name = call.name;
+                const args = call.args;
+
+                let toolResult: any = { error: "Unknown tool" };
+                
+                if (name === 'create_tutorial') {
+                    toolResult = await toolFunctions.create_tutorial(args as any);
+                } else if (name === 'check_url') {
+                    toolResult = await toolFunctions.check_url(args as any);
+                }
+
+                // Send tool result back to model
+                result = await this._chat.sendMessage([{
+                    functionResponse: {
+                        name: name,
+                        response: toolResult
+                    }
+                }]);
+                response = await result.response;
+                calls = response.functionCalls();
+            }
+
             return response.text();
         } catch (error: any) {
             console.error('Error calling Gemini:', error);
