@@ -79,7 +79,9 @@ const webviewConfig = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env': JSON.stringify({})
+      'process.env': JSON.stringify({}),
+      'process.version': JSON.stringify(''),
+      'process.browser': JSON.stringify(true)
     })
   ],
   devtool: 'nosources-source-map',
