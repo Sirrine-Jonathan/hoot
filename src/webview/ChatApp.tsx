@@ -1,5 +1,8 @@
 import * as React from 'react';
 import { Send, User, Bot, Key, Settings, Brain } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface Message {
     role: 'user' | 'model';
@@ -55,10 +58,7 @@ export const ChatApp: React.FC = () => {
         };
 
         window.addEventListener('message', handleMessage);
-        
-        // Request initial status
         vscode?.postMessage({ command: 'ready' });
-
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
@@ -120,7 +120,7 @@ export const ChatApp: React.FC = () => {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '10px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '10px', boxSizing: 'border-box', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: '5px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1, minWidth: 0 }}>
                     <Brain size={14} style={{ opacity: 0.7, flexShrink: 0 }} />
@@ -187,11 +187,39 @@ export const ChatApp: React.FC = () => {
                             borderRadius: '8px',
                             backgroundColor: msg.role === 'user' ? 'var(--vscode-button-background)' : 'var(--vscode-editor-inactiveSelectionBackground)',
                             color: msg.role === 'user' ? 'var(--vscode-button-foreground)' : 'var(--vscode-editor-foreground)',
-                            maxWidth: '90%',
+                            maxWidth: '95%',
                             wordBreak: 'break-word',
-                            lineHeight: '1.4'
+                            lineHeight: '1.4',
+                            fontSize: '0.9em'
                         }}>
-                            {msg.text}
+                            {msg.role === 'model' ? (
+                                <ReactMarkdown
+                                    components={{
+                                        code({ node, inline, className, children, ...props }: any) {
+                                            const match = /language-(\w+)/.exec(className || '');
+                                            return !inline && match ? (
+                                                <SyntaxHighlighter
+                                                    style={vscDarkPlus}
+                                                    language={match[1]}
+                                                    PreTag="div"
+                                                    customStyle={{ margin: '0.5em 0', borderRadius: '4px', fontSize: '0.9em' }}
+                                                    {...props}
+                                                >
+                                                    {String(children).replace(/\n$/, '')}
+                                                </SyntaxHighlighter>
+                                            ) : (
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {msg.text}
+                                </ReactMarkdown>
+                            ) : (
+                                msg.text
+                            )}
                         </div>
                     </div>
                 ))}
@@ -201,7 +229,7 @@ export const ChatApp: React.FC = () => {
                 <div ref={messagesEndRef} />
             </div>
             
-            <div style={{ display: 'flex', gap: '5px' }}>
+            <div style={{ display: 'flex', gap: '5px', paddingBottom: '10px' }}>
                 <input 
                     type="text" 
                     value={input}
@@ -223,7 +251,7 @@ export const ChatApp: React.FC = () => {
                     disabled={isLoading}
                     style={{ 
                         padding: '8px', 
-                        borderRadius: '4px',
+                        borderRadius: '4px', 
                         border: 'none',
                         backgroundColor: 'var(--vscode-button-background)',
                         color: 'var(--vscode-button-foreground)',

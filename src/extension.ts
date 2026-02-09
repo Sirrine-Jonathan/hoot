@@ -96,6 +96,14 @@ export function activate(context: vscode.ExtensionContext) {
 			});
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('hoot.clearHints', () => {
+			if (shadowTeacher) {
+				shadowTeacher.clearHints();
+			}
+		})
+	);
 }
 
 export async function getApiKey(context: vscode.ExtensionContext): Promise<string | undefined> {

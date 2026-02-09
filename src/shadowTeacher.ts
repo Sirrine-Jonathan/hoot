@@ -36,11 +36,19 @@ export class ShadowTeacher {
         }
         
         // Clear existing decorations immediately when user starts moving/typing
-        editor.setDecorations(this._decorationType, []);
+        this.clearHints(editor);
 
         this._timeout = setTimeout(() => {
             this._provideShadowHint(editor);
         }, 2000); // Wait 2 seconds of inactivity
+    }
+
+    public clearHints(editor?: vscode.TextEditor) {
+        const targetEditor = editor || vscode.window.activeTextEditor;
+        if (targetEditor) {
+            targetEditor.setDecorations(this._decorationType, []);
+            vscode.commands.executeCommand('setContext', 'hoot.hintsVisible', false);
+        }
     }
 
     private async _provideShadowHint(editor: vscode.TextEditor) {
@@ -89,6 +97,7 @@ export class ShadowTeacher {
         };
 
         editor.setDecorations(this._decorationType, [decoration]);
+        vscode.commands.executeCommand('setContext', 'hoot.hintsVisible', true);
     }
 
     public dispose() {
