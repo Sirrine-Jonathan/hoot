@@ -1,0 +1,22 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Circle -->
+    <circle cx="64" cy="64" r="60" fill="#4f46e5" />
+    
+    <!-- Owl Face / "H" Hybrid -->
+    <path d="M40 45 V83 M88 45 V83 M40 64 H88" 
+          stroke="white" 
+          stroke-width="10" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+    
+    <!-- Eyes -->
+    <circle cx="50" cy="52" r="6" fill="white" />
+    <circle cx="78" cy="52" r="6" fill="white" />
+    
+    <!-- Pupils -->
+    <circle cx="50" cy="52" r="2.5" fill="#4f46e5" />
+    <circle cx="78" cy="52" r="2.5" fill="#4f46e5" />
+    
+    <!-- Beak -->
+    <path d="M64 68 L60 74 L68 74 Z" fill="white" />
+</svg>

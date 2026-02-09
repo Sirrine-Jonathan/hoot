@@ -13,13 +13,14 @@
     "onView:hoot.chatView"
   ],
   "main": "./dist/extension.js",
+  "icon": "resources/icon.svg",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
           "id": "hoot-sidebar",
           "title": "Hoot",
-          "icon": "$(school)"
+          "icon": "resources/icon.svg"
         }
       ]
     },

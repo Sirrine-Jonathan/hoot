@@ -2,7 +2,9 @@
 
 Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent." Unlike standard AI assistants that just provide code, Hoot is designed to help you **learn** by using the Socratic method—guiding you with hints, questions, and contextual feedback.
 
-![Hoot Banner](resources/banner_dark.png)
+<p align="center">
+  <img src="resources/icon.svg" width="128" alt="Hoot Logo">
+</p>
 
 ## 🚀 Features
 
@@ -21,7 +23,7 @@ Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/hoot-agent/hoot.git
+   git clone https://github.com/Sirrine-Jonathan/hoot.git
    ```
 2. Install dependencies:
    ```bash
