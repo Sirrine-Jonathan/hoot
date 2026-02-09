@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel, ChatSession } from "@google/generative-ai";
 import { tutorialTools, toolFunctions } from "./tools/tutorialTools";
+import { contextTools, contextFunctions } from "./tools/contextTools";
 
 export class GeminiService {
     private _genAI?: GoogleGenerativeAI;
@@ -7,6 +8,12 @@ export class GeminiService {
     private _chat: ChatSession;
     private _apiKey: string;
     private _currentModelName: string = "models/gemini-2.0-flash";
+
+    // Combined tool implementations
+    private _toolRegistry: Record<string, Function> = {
+        ...toolFunctions,
+        ...contextFunctions
+    };
 
     constructor(apiKeyOrModel: string | GenerativeModel) {
         if (typeof apiKeyOrModel === 'string') {
@@ -25,13 +32,17 @@ export class GeminiService {
 
     private _createModel(modelName: string): GenerativeModel {
         if (!this._genAI) { throw new Error("GenAI not initialized"); }
+        
+        // Combine all tools
+        const allTools = [...tutorialTools, ...contextTools];
+
         return this._genAI.getGenerativeModel({ 
             model: modelName,
             systemInstruction: {
                 role: "system",
-                parts: [{ text: "You are Hoot, an AI-powered Teacher Agent for VS Code. Your goal is to guide students using the Socratic method. Never give the full answer immediately. Instead, ask guiding questions, provide hints, and explain the 'why' behind concepts. Encourage the student and help them break down complex problems into smaller steps. When a student explicitly asks for a tutorial or a comprehensive guide, use the 'create_tutorial' tool to generate a markdown file." }]
+                parts: [{ text: "You are Hoot, an AI-powered Teacher Agent for VS Code. Your goal is to guide students using the Socratic method. Never give the full answer immediately. Instead, ask guiding questions, provide hints, and explain the 'why' behind concepts. Encourage the student and help them break down complex problems into smaller steps. Use the 'create_tutorial' tool when a comprehensive guide is needed. Use the context tools ('read_active_file', 'read_selected_code', 'list_files') to understand what the user is working on so you can provide specific, contextual help." }]
             },
-            tools: tutorialTools
+            tools: allTools
         }, { apiVersion: 'v1beta' });
     }
 
@@ -61,7 +72,6 @@ export class GeminiService {
     async switchModel(modelName: string) {
         this._currentModelName = modelName;
         this._model = this._createModel(modelName);
-        // We start a new chat when switching models to ensure compatibility
         this._chat = this._model.startChat({
             history: [],
         });
@@ -74,25 +84,34 @@ export class GeminiService {
             let calls = response.functionCalls();
 
             while (calls && calls.length > 0) {
-                const call = calls[0]; // Handle one call at a time for simplicity in this loop
-                const name = call.name;
-                const args = call.args;
+                const functionResponses = [];
 
-                let toolResult: any = { error: "Unknown tool" };
-                
-                if (name === 'create_tutorial') {
-                    toolResult = await toolFunctions.create_tutorial(args as any);
-                } else if (name === 'check_url') {
-                    toolResult = await toolFunctions.check_url(args as any);
+                for (const call of calls) {
+                    const name = call.name;
+                    const args = call.args;
+
+                    console.log(`Hoot calling tool: ${name}`, args);
+
+                    if (this._toolRegistry[name]) {
+                        const toolResult = await this._toolRegistry[name](args);
+                        functionResponses.push({
+                            functionResponse: {
+                                name: name,
+                                response: toolResult
+                            }
+                        });
+                    } else {
+                        functionResponses.push({
+                            functionResponse: {
+                                name: name,
+                                response: { error: `Tool ${name} not found.` }
+                            }
+                        });
+                    }
                 }
 
-                // Send tool result back to model
-                result = await this._chat.sendMessage([{
-                    functionResponse: {
-                        name: name,
-                        response: toolResult
-                    }
-                }]);
+                // Send all tool results back to model
+                result = await this._chat.sendMessage(functionResponses);
                 response = await result.response;
                 calls = response.functionCalls();
             }
