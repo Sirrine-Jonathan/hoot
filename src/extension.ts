@@ -3,11 +3,13 @@
 import * as vscode from 'vscode';
 import { HootChatViewProvider } from './chatViewProvider';
 import { GeminiService } from './geminiService';
+import { ShadowTeacher } from './shadowTeacher';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	let geminiService: GeminiService | undefined;
+	let shadowTeacher: ShadowTeacher | undefined;
 
 	const getGeminiService = async () => {
 		if (geminiService) {
@@ -16,10 +18,20 @@ export function activate(context: vscode.ExtensionContext) {
 		const apiKey = await getApiKey(context);
 		if (apiKey) {
 			geminiService = new GeminiService(apiKey);
+			
+			// Initialize shadow teacher once we have a service
+			if (!shadowTeacher) {
+				shadowTeacher = new ShadowTeacher(geminiService);
+				context.subscriptions.push(shadowTeacher);
+			}
+			
 			return geminiService;
 		}
 		return undefined;
 	};
+
+	// Try to init service early if key exists
+	getGeminiService();
 
 	const provider = new HootChatViewProvider(context.extensionUri, getGeminiService);
 
@@ -38,10 +50,18 @@ export function activate(context: vscode.ExtensionContext) {
 			if (apiKey) {
 				const trimmedKey = apiKey.trim();
 				await context.secrets.store('gemini-api-key', trimmedKey);
-				geminiService = undefined; // Reset service so it's re-initialized with new key
+				
+				// Reset services
+				geminiService = undefined;
+				if (shadowTeacher) {
+					shadowTeacher.dispose();
+					shadowTeacher = undefined;
+				}
+				
+				// Re-init
+				getGeminiService();
 				
 				console.log(`API Key updated. Length: ${trimmedKey.length}, Starts with: ${trimmedKey.substring(0, 3)}...`);
-				
 				vscode.window.showInformationMessage('Gemini API Key saved securely.');
 			}
 		})
