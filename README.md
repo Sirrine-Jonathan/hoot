@@ -2,16 +2,22 @@
 
 Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent." Unlike standard AI assistants that just provide code, Hoot is designed to help you **learn** by using the Socratic method—guiding you with hints, questions, and contextual feedback.
 
-<p align="center">
-  <img src="resources/icon.svg" width="128" alt="Hoot Logo">
-</p>
+![Hoot Banner](resources/hoot-banner-final.png)
 
 ## 🚀 Features
 
 - **Socratic Mentoring:** Hoot focuses on the "why" behind the code. It asks guiding questions and provides hints to help you reach the solution yourself.
 - **Sidebar Chat Interface:** A dedicated React-based chat panel for persistent, focused learning sessions.
-- **Context-Aware Hints:** (Coming Soon) Contextual help via Hover, CodeLens, and inline decorations.
+- **Dynamic Model Selection:** Choose from multiple Gemini models (Flash, Pro, etc.) based on your needs.
+- **Automated Tutorials:** Ask Hoot to create comprehensive Markdown tutorials in your workspace.
 - **Secure by Design:** Your Gemini API keys are stored securely using VS Code's `SecretStorage` (native OS keychain).
+
+## 📸 Branding & Visuals
+
+<p align="center">
+  <img src="resources/hoot_promo_cinematic_S0_1770670710.webp" width="45%" alt="Promo 1">
+  <img src="resources/hoot_promo_cinematic_S1_1770670710.webp" width="45%" alt="Promo 2">
+</p>
 
 ## 🛠️ Getting Started
 
