@@ -19,10 +19,7 @@
         {
           "id": "hoot-sidebar",
           "title": "Hoot",
-          "icon": {
-            "light": "resources/icon_dark.png",
-            "dark": "resources/icon_white.png"
-          }
+          "icon": "resources/icon_white.png"
         }
       ]
     },
