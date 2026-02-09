@@ -19,7 +19,7 @@
         {
           "id": "hoot-sidebar",
           "title": "Hoot",
-          "icon": "resources/icon_white.png"
+          "icon": "$(beaker)"
         }
       ]
     },
