@@ -26,9 +26,9 @@ export class GeminiService {
             const result = await this._chat.sendMessage(prompt);
             const response = await result.response;
             return response.text();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error calling Gemini:', error);
-            return 'Sorry, I encountered an error while thinking.';
+            return `Sorry, I encountered an error: ${error.message || 'Unknown error'}`;
         }
     }
 }

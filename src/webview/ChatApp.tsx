@@ -47,6 +47,10 @@ export const ChatApp: React.FC = () => {
         };
 
         window.addEventListener('message', handleMessage);
+        
+        // Request initial status
+        vscode?.postMessage({ command: 'ready' });
+
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 

@@ -32,11 +32,15 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 
 		webviewView.webview.onDidReceiveMessage(async data => {
 			switch (data.command) {
+				case 'ready':
+					this._checkApiKeyStatus();
+					break;
 				case 'chat':
 					{
 						const service = await this._getGeminiService();
 						if (!service) {
 							webviewView.webview.postMessage({ type: 'chatResponse', text: 'Please set your Gemini API Key first.' });
+							this._checkApiKeyStatus();
 							return;
 						}
 						const response = await service.ask(data.text);

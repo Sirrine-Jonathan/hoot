@@ -79,8 +79,7 @@ const webviewConfig = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env': JSON.stringify({}),
-      'process': JSON.stringify({ env: {} })
+      'process.env': JSON.stringify({})
     })
   ],
   devtool: 'nosources-source-map',
