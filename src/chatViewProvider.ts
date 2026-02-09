@@ -77,6 +77,13 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 		this._checkApiKeyStatus();
 	}
 
+	public showLesson(answer: string) {
+		if (this._view) {
+			this._view.show?.(true); // Ensure sidebar is visible
+			this._view.webview.postMessage({ type: 'showLesson', text: answer });
+		}
+	}
+
 	private async _checkApiKeyStatus() {
 		const service = await this._getGeminiService();
 		this._view?.webview.postMessage({ type: 'apiKeyStatus', hasKey: !!service });

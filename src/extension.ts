@@ -104,6 +104,12 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('hoot.openLesson', (answer: string) => {
+			provider.showLesson(answer);
+		})
+	);
 }
 
 export async function getApiKey(context: vscode.ExtensionContext): Promise<string | undefined> {

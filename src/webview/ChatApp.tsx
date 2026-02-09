@@ -54,6 +54,10 @@ export const ChatApp: React.FC = () => {
                 case 'modelsList':
                     setModels(message.models);
                     break;
+                case 'showLesson':
+                    setMessages(prev => [...prev, { role: 'model', text: message.text }]);
+                    setIsLoading(false);
+                    break;
             }
         };
 

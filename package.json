@@ -49,6 +49,10 @@
       {
         "command": "hoot.clearHints",
         "title": "Hoot: Clear Inline Hints"
+      },
+      {
+        "command": "hoot.openLesson",
+        "title": "Hoot: Open Detailed Lesson"
       }
     ],
     "keybindings": [
