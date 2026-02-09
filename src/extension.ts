@@ -36,8 +36,12 @@ export function activate(context: vscode.ExtensionContext) {
 			});
 
 			if (apiKey) {
-				await context.secrets.store('gemini-api-key', apiKey);
+				const trimmedKey = apiKey.trim();
+				await context.secrets.store('gemini-api-key', trimmedKey);
 				geminiService = undefined; // Reset service so it's re-initialized with new key
+				
+				console.log(`API Key updated. Length: ${trimmedKey.length}, Starts with: ${trimmedKey.substring(0, 3)}...`);
+				
 				vscode.window.showInformationMessage('Gemini API Key saved securely.');
 			}
 		})
