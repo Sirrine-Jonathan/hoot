@@ -36,15 +36,28 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 					{
 						const service = await this._getGeminiService();
 						if (!service) {
-							webviewView.webview.postMessage({ type: 'chatResponse', text: 'Please set your Gemini API Key first using the "Hoot: Set Gemini API Key" command.' });
+							webviewView.webview.postMessage({ type: 'chatResponse', text: 'Please set your Gemini API Key first.' });
 							return;
 						}
 						const response = await service.ask(data.text);
 						webviewView.webview.postMessage({ type: 'chatResponse', text: response });
 						break;
 					}
+				case 'setApiKey':
+					{
+						await vscode.commands.executeCommand('hoot.setApiKey');
+						this._checkApiKeyStatus();
+						break;
+					}
 			}
 		});
+
+		this._checkApiKeyStatus();
+	}
+
+	private async _checkApiKeyStatus() {
+		const service = await this._getGeminiService();
+		this._view?.webview.postMessage({ type: 'apiKeyStatus', hasKey: !!service });
 	}
 
 	private _getHtmlForWebview(webview: vscode.Webview) {

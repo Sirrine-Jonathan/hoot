@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Send, User, Bot } from 'lucide-react';
+import { Send, User, Bot, Key, Settings } from 'lucide-react';
 
 interface Message {
     role: 'user' | 'model';
@@ -20,6 +20,7 @@ export const ChatApp: React.FC = () => {
     ]);
     const [input, setInput] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
+    const [hasApiKey, setHasApiKey] = React.useState<boolean | null>(null);
 
     const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -34,9 +35,14 @@ export const ChatApp: React.FC = () => {
     React.useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             const message = event.data;
-            if (message.type === 'chatResponse') {
-                setMessages(prev => [...prev, { role: 'model', text: message.text }]);
-                setIsLoading(false);
+            switch (message.type) {
+                case 'chatResponse':
+                    setMessages(prev => [...prev, { role: 'model', text: message.text }]);
+                    setIsLoading(false);
+                    break;
+                case 'apiKeyStatus':
+                    setHasApiKey(message.hasKey);
+                    break;
             }
         };
 
@@ -55,8 +61,63 @@ export const ChatApp: React.FC = () => {
         setIsLoading(true);
     };
 
+    const setApiKey = () => {
+        vscode?.postMessage({ command: 'setApiKey' });
+    };
+
+    if (hasApiKey === false) {
+        return (
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                height: '100vh', 
+                padding: '20px',
+                textAlign: 'center',
+                gap: '15px'
+            }}>
+                <Key size={48} style={{ opacity: 0.5 }} />
+                <h3>Welcome to Hoot!</h3>
+                <p>To start learning, you'll need a Gemini API Key.</p>
+                <button 
+                    onClick={setApiKey}
+                    style={{ 
+                        padding: '8px 16px', 
+                        borderRadius: '4px',
+                        border: 'none',
+                        backgroundColor: 'var(--vscode-button-background)',
+                        color: 'var(--vscode-button-foreground)',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    Set API Key
+                </button>
+                <p style={{ fontSize: '0.8em', opacity: 0.7 }}>
+                    You can get a free key from the <a href="https://aistudio.google.com/app/apikey" style={{ color: 'var(--vscode-textLink-foreground)' }}>Google AI Studio</a>.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '10px', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5px' }}>
+                <button 
+                    onClick={setApiKey}
+                    title="Change API Key"
+                    style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: 'var(--vscode-foreground)', 
+                        cursor: 'pointer',
+                        opacity: 0.6
+                    }}
+                >
+                    <Settings size={16} />
+                </button>
+            </div>
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '10px', paddingRight: '5px' }}>
                 {messages.map((msg, i) => (
                     <div key={i} style={{ 
