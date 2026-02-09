@@ -35,12 +35,38 @@ export const contextTools: Tool[] = [
                     },
                     required: []
                 }
+            },
+            {
+                name: "read_diagnostics",
+                description: "Reads linting errors, warnings, or other diagnostics at the current cursor position. Use this to help explain bugs.",
+                parameters: {
+                    type: SchemaType.OBJECT,
+                    properties: {},
+                    required: []
+                }
             }
         ]
     }
 ];
 
 export const contextFunctions = {
+    read_diagnostics: async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return { error: "No active editor found." };
+        }
+        const position = editor.selection.active;
+        const diagnostics = vscode.languages.getDiagnostics(editor.document.uri)
+            .filter(d => d.range.contains(position));
+        
+        return {
+            diagnostics: diagnostics.map(d => ({
+                message: d.message,
+                severity: vscode.DiagnosticSeverity[d.severity],
+                source: d.source
+            }))
+        };
+    },
     read_active_file: async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
