@@ -36,6 +36,10 @@
       {
         "command": "hoot.setApiKey",
         "title": "Hoot: Set Gemini API Key"
+      },
+      {
+        "command": "hoot.checkApiKey",
+        "title": "Hoot: Check API Key Status"
       }
     ]
   },
