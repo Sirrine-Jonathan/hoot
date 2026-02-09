@@ -9,12 +9,12 @@ export class GeminiService {
         if (typeof apiKeyOrModel === 'string') {
             this._genAI = new GoogleGenerativeAI(apiKeyOrModel);
             this._model = this._genAI.getGenerativeModel({ 
-                model: "gemini-1.5-flash",
+                model: "gemini-2.0-flash",
                 systemInstruction: {
                     role: "system",
                     parts: [{ text: "You are Hoot, an AI-powered Teacher Agent for VS Code. Your goal is to guide students using the Socratic method. Never give the full answer immediately. Instead, ask guiding questions, provide hints, and explain the 'why' behind concepts. Encourage the student and help them break down complex problems into smaller steps." }]
                 }
-            }, { apiVersion: 'v1' });
+            }, { apiVersion: 'v1beta' });
         } else {
             this._model = apiKeyOrModel;
         }
