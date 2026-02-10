@@ -21,6 +21,9 @@ Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent
 
 ## 🛠️ Getting Started
 
+### Prerequisites
+- A **Gemini API Key**. You can get a free one from **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
+
 ### Beta Installation (VSIX)
 1. Download the latest `hoot-x.x.x.vsix` file.
 2. In VS Code, go to the **Extensions** view (`Ctrl+Shift+X`).
