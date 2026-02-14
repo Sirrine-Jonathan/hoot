@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { GeminiService } from './geminiService';
+import { IAIService } from './aiService';
 
 export class HootChatViewProvider implements vscode.WebviewViewProvider {
 
@@ -9,7 +9,7 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 
 	constructor(
 		private readonly _extensionUri: vscode.Uri,
-		private readonly _getGeminiService: () => Promise<GeminiService | undefined>,
+		private readonly _getAIService: () => Promise<IAIService | undefined>,
 	) { }
 
 	public resolveWebviewView(
@@ -33,11 +33,11 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 		webviewView.webview.onDidReceiveMessage(async data => {
 			switch (data.command) {
 				case 'ready':
-					this._checkApiKeyStatus();
+					this._checkServiceStatus();
 					break;
 				case 'getModels':
 					{
-						const service = await this._getGeminiService();
+						const service = await this._getAIService();
 						if (service) {
 							const models = await service.getAvailableModels();
 							webviewView.webview.postMessage({ type: 'modelsList', models });
@@ -46,7 +46,7 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 					}
 				case 'switchModel':
 					{
-						const service = await this._getGeminiService();
+						const service = await this._getAIService();
 						if (service) {
 							await service.switchModel(data.modelName);
 							webviewView.webview.postMessage({ type: 'chatResponse', text: `Switched to model: ${data.modelName}. Conversation history cleared.` });
@@ -55,10 +55,14 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 					}
 				case 'chat':
 					{
-						const service = await this._getGeminiService();
+						const service = await this._getAIService();
 						if (!service) {
-							webviewView.webview.postMessage({ type: 'chatResponse', text: 'Please set your Gemini API Key first.' });
-							this._checkApiKeyStatus();
+							const provider = vscode.workspace.getConfiguration('hoot').get('provider', 'Gemini');
+							const message = provider === 'Gemini' 
+								? 'Please set your Gemini API Key first.'
+								: 'Please ensure Ollama is running and accessible.';
+							webviewView.webview.postMessage({ type: 'chatResponse', text: message });
+							this._checkServiceStatus();
 							return;
 						}
 						const response = await service.ask(data.text);
@@ -68,13 +72,36 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 				case 'setApiKey':
 					{
 						await vscode.commands.executeCommand('hoot.setApiKey');
-						this._checkApiKeyStatus();
+						this._checkServiceStatus();
+						break;
+					}
+				case 'removeApiKey':
+					{
+						await vscode.commands.executeCommand('hoot.removeApiKey');
+						this._checkServiceStatus();
+						break;
+					}
+				case 'switchProvider':
+					{
+						await vscode.commands.executeCommand('hoot.switchProvider');
+						break;
+					}
+				case 'setupOllama':
+					{
+						await vscode.commands.executeCommand('hoot.setupOllama');
 						break;
 					}
 			}
 		});
 
-		this._checkApiKeyStatus();
+		this._checkServiceStatus();
+	}
+
+	public refresh() {
+		if (this._view) {
+			this._view.webview.html = this._getHtmlForWebview(this._view.webview);
+			this._checkServiceStatus();
+		}
 	}
 
 	public showLesson(answer: string) {
@@ -84,9 +111,19 @@ export class HootChatViewProvider implements vscode.WebviewViewProvider {
 		}
 	}
 
-	private async _checkApiKeyStatus() {
-		const service = await this._getGeminiService();
-		this._view?.webview.postMessage({ type: 'apiKeyStatus', hasKey: !!service });
+	private async _checkServiceStatus() {
+		const service = await this._getAIService();
+		const isConnected = service ? await service.checkConnection() : false;
+		
+		this._view?.webview.postMessage({ 
+			type: 'serviceStatus', 
+			hasService: !!service,
+			isConnected: isConnected,
+			provider: service?.provider || 'Unknown'
+		});
+		
+		// Compatibility for old UI
+		this._view?.webview.postMessage({ type: 'apiKeyStatus', hasKey: !!service && isConnected });
 	}
 
 	private _getHtmlForWebview(webview: vscode.Webview) {

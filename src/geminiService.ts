@@ -1,8 +1,11 @@
 import { GoogleGenerativeAI, GenerativeModel, ChatSession } from "@google/generative-ai";
 import { tutorialTools, toolFunctions } from "./tools/tutorialTools";
 import { contextTools, contextFunctions } from "./tools/contextTools";
+import { IAIService, AIModel, AIProvider } from "./aiService";
 
-export class GeminiService {
+export class GeminiService implements IAIService {
+    public readonly name = "Gemini";
+    public readonly provider: AIProvider = 'Gemini';
     private _genAI?: GoogleGenerativeAI;
     private _model: GenerativeModel;
     private _chat: ChatSession;
@@ -75,6 +78,16 @@ export class GeminiService {
         this._chat = this._model.startChat({
             history: [],
         });
+    }
+
+    async checkConnection(): Promise<boolean> {
+        try {
+            // A simple way to check if the API key is valid without a full generation
+            const models = await this.getAvailableModels();
+            return models.length > 0;
+        } catch {
+            return false;
+        }
     }
 
     async ask(prompt: string): Promise<string> {

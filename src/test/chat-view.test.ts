@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { HootChatViewProvider } from '../chatViewProvider';
-import { GeminiService } from '../geminiService';
+import { IAIService } from '../aiService';
 
 suite('Chat View Provider Test Suite', () => {
 	vscode.window.showInformationMessage('Start Chat View tests.');
@@ -41,7 +41,7 @@ suite('Chat View Provider Test Suite', () => {
     test('HootChatViewProvider uses GeminiService', async () => {
         const mockGeminiService = {
             ask: async (text: string) => `Response to: ${text}`
-        } as GeminiService;
+        } as IAIService;
 
         const provider = new HootChatViewProvider(vscode.Uri.file('/'), async () => mockGeminiService);
         

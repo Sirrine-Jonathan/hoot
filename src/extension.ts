@@ -3,40 +3,80 @@
 import * as vscode from 'vscode';
 import { HootChatViewProvider } from './chatViewProvider';
 import { GeminiService } from './geminiService';
+import { OllamaService } from './ollamaService';
 import { ShadowTeacher } from './shadowTeacher';
+import { IAIService, AIProvider } from './aiService';
+import { OllamaInstaller } from './ollamaInstaller';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	let geminiService: GeminiService | undefined;
+	let aiService: IAIService | undefined;
 	let shadowTeacher: ShadowTeacher | undefined;
 
-	const getGeminiService = async () => {
-		if (geminiService) {
-			return geminiService;
+	const getAIService = async () => {
+		if (aiService) {
+			return aiService;
 		}
-		const apiKey = await getApiKey(context);
-		if (apiKey) {
-			geminiService = new GeminiService(apiKey);
-			
-			// Initialize shadow teacher once we have a service
-			if (!shadowTeacher) {
-				shadowTeacher = new ShadowTeacher(geminiService);
-				context.subscriptions.push(shadowTeacher);
+
+		const provider = context.globalState.get<AIProvider>('hoot.provider', 'Gemini');
+		
+		if (provider === 'Gemini') {
+			const apiKey = await getApiKey(context);
+			if (apiKey) {
+				aiService = new GeminiService(apiKey);
 			}
-			
-			return geminiService;
+		} else {
+			aiService = new OllamaService();
 		}
-		return undefined;
+
+		if (aiService && !shadowTeacher) {
+			shadowTeacher = new ShadowTeacher(aiService);
+			context.subscriptions.push(shadowTeacher);
+		}
+		
+		return aiService;
 	};
 
-	// Try to init service early if key exists
-	getGeminiService();
+	// Try to init service early
+	getAIService();
 
-	const provider = new HootChatViewProvider(context.extensionUri, getGeminiService);
+	const provider = new HootChatViewProvider(context.extensionUri, getAIService);
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(HootChatViewProvider.viewType, provider)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('hoot.setupOllama', async () => {
+			await OllamaInstaller.ensureOllamaReady();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('hoot.pullModel', async (modelName: string) => {
+			if (modelName) {
+				await OllamaInstaller.pullModel(modelName);
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('hoot.switchProvider', async () => {
+			const choice = await vscode.window.showQuickPick(['Gemini', 'Ollama'], {
+				placeHolder: 'Select AI Provider'
+			});
+
+			if (choice) {
+				await context.globalState.update('hoot.provider', choice);
+				aiService = undefined;
+				if (shadowTeacher) {
+					shadowTeacher.dispose();
+					shadowTeacher = undefined;
+				}
+				const newService = await getAIService();
+				vscode.window.showInformationMessage(`Switched to ${choice} provider.`);
+				provider.refresh(); // Refresh webview
+			}
+		})
 	);
 
 	context.subscriptions.push(
@@ -51,48 +91,56 @@ export function activate(context: vscode.ExtensionContext) {
 				const trimmedKey = apiKey.trim();
 				await context.secrets.store('gemini-api-key', trimmedKey);
 				
-				// Reset services
-				geminiService = undefined;
-				if (shadowTeacher) {
-					shadowTeacher.dispose();
-					shadowTeacher = undefined;
+				// Reset services if currently using Gemini
+				const currentProvider = context.globalState.get<AIProvider>('hoot.provider', 'Gemini');
+				if (currentProvider === 'Gemini') {
+					aiService = undefined;
+					if (shadowTeacher) {
+						shadowTeacher.dispose();
+						shadowTeacher = undefined;
+					}
+					getAIService();
 				}
 				
-				// Re-init
-				getGeminiService();
-				
-				console.log(`API Key updated. Length: ${trimmedKey.length}, Starts with: ${trimmedKey.substring(0, 3)}...`);
 				vscode.window.showInformationMessage('Gemini API Key saved securely.');
 			}
 		})
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('hoot.checkApiKey', async () => {
-			const apiKey = await getApiKey(context);
-			if (apiKey) {
-				vscode.window.showInformationMessage(`API Key is set (Length: ${apiKey.length}).`);
-			} else {
-				vscode.window.showWarningMessage('API Key is NOT set.');
+		vscode.commands.registerCommand('hoot.removeApiKey', async () => {
+			await context.secrets.delete('gemini-api-key');
+			
+			// Reset services if currently using Gemini
+			const currentProvider = context.globalState.get<AIProvider>('hoot.provider', 'Gemini');
+			if (currentProvider === 'Gemini') {
+				aiService = undefined;
+				if (shadowTeacher) {
+					shadowTeacher.dispose();
+					shadowTeacher = undefined;
+				}
 			}
+			
+			vscode.window.showInformationMessage('Gemini API Key removed.');
+			provider.refresh(); // Update the UI status
 		})
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('hoot.testGemini', async () => {
-			const service = await getGeminiService();
+		vscode.commands.registerCommand('hoot.testConnection', async () => {
+			const service = await getAIService();
 			if (!service) {
-				vscode.window.showErrorMessage('Gemini Service not initialized. Please set API Key.');
+				vscode.window.showErrorMessage('AI Service not initialized. Please check your settings.');
 				return;
 			}
 
 			vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
-				title: "Testing Gemini Connection...",
+				title: `Testing ${service.name} Connection...`,
 				cancellable: false
 			}, async () => {
 				const response = await service.ask('Hello, are you there? Respond with "Yes, I am Hoot!" if you can hear me.');
-				vscode.window.showInformationMessage(`Gemini Response: ${response}`);
+				vscode.window.showInformationMessage(`${service.name} Response: ${response}`);
 			});
 		})
 	);

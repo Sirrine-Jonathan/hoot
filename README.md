@@ -7,10 +7,12 @@ Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent
 ## 🚀 Features
 
 - **Socratic Mentoring:** Hoot focuses on the "why" behind the code. It asks guiding questions and provides hints to help you reach the solution yourself.
+- **Dual AI Providers:** Choose between **Google Gemini** (Cloud) and **Ollama** (Local). Work entirely offline with privacy-focused models.
 - **Sidebar Chat Interface:** A dedicated React-based chat panel for persistent, focused learning sessions.
-- **Dynamic Model Selection:** Choose from multiple Gemini models (Flash, Pro, etc.) based on your needs.
+- **Dynamic Model Selection:** Choose from multiple Gemini or Ollama models (e.g., `qwen2.5-coder:7b`, `llama3`, `mistral`) based on your needs.
 - **Automated Tutorials:** Ask Hoot to create comprehensive Markdown tutorials in your workspace.
 - **Secure by Design:** Your Gemini API keys are stored securely using VS Code's `SecretStorage` (native OS keychain).
+- **One-Click Setup:** Integrated PATH fixing and model pulling for Ollama to get you running locally in seconds.
 
 ## 📸 Branding & Visuals
 
@@ -22,7 +24,8 @@ Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent
 ## 🛠️ Getting Started
 
 ### Prerequisites
-- A **Gemini API Key**. You can get a free one from **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
+- For Cloud: A **Gemini API Key**. Get one for free from **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
+- For Local: **Ollama** installed on your machine.
 
 ### Beta Installation (VSIX)
 1. Download the latest `hoot-x.x.x.vsix` file.
@@ -32,8 +35,10 @@ Hoot is a VS Code extension that acts as your personal AI-powered "Teacher Agent
 
 ### Setup Hoot
 1. Open the Hoot sidebar (🦉 icon).
-2. Click **Set API Key** (you'll need a [Gemini API Key](https://aistudio.google.com/app/apikey)).
-3. Start coding! Hoot will provide Socratic hints as you work.
+2. Choose your provider in the **Settings** view (gear icon).
+3. If using Gemini, click **Set API Key**.
+4. If using Ollama, click **Setup Ollama** to pull the recommended coding model.
+5. Start coding! Hoot will provide Socratic hints as you work.
 
 ## 🧪 Development & Testing
 

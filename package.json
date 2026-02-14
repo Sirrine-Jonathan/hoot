@@ -7,9 +7,9 @@
     "url": "https://github.com/Sirrine-Jonathan/hoot.git"
   },
   "description": " An AI-powered agent to help learn coding.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
-    "vscode": "^1.109.0"
+    "vscode": "^1.108.0"
   },
   "categories": [
     "Other"
@@ -44,12 +44,24 @@
         "title": "Hoot: Set Gemini API Key"
       },
       {
-        "command": "hoot.checkApiKey",
-        "title": "Hoot: Check API Key Status"
+        "command": "hoot.removeApiKey",
+        "title": "Hoot: Remove Gemini API Key"
       },
       {
-        "command": "hoot.testGemini",
-        "title": "Hoot: Test Gemini Connection"
+        "command": "hoot.switchProvider",
+        "title": "Hoot: Switch AI Provider (Gemini/Ollama)"
+      },
+      {
+        "command": "hoot.testConnection",
+        "title": "Hoot: Test AI Connection"
+      },
+      {
+        "command": "hoot.setupOllama",
+        "title": "Hoot: Setup Ollama (Local LLM)"
+      },
+      {
+        "command": "hoot.pullModel",
+        "title": "Hoot: Pull Ollama Model"
       },
       {
         "command": "hoot.clearHints",
@@ -60,6 +72,20 @@
         "title": "Hoot: Open Detailed Lesson"
       }
     ],
+    "configuration": {
+      "title": "Hoot",
+      "properties": {
+        "hoot.provider": {
+          "type": "string",
+          "enum": [
+            "Gemini",
+            "Ollama"
+          ],
+          "default": "Gemini",
+          "description": "The AI provider to use for Hoot."
+        }
+      }
+    },
     "keybindings": [
       {
         "command": "hoot.clearHints",
@@ -85,7 +111,7 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@types/vscode": "^1.109.0",
+    "@types/vscode": "^1.108.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.2",
@@ -98,6 +124,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "lucide-react": "^0.563.0",
+    "ollama": "^0.6.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",

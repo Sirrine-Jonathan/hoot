@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { GeminiService } from './geminiService';
+import { IAIService } from './aiService';
 import { ContextEngine } from './contextEngine';
 
 export class ShadowTeacher implements vscode.CodeLensProvider {
@@ -11,7 +11,7 @@ export class ShadowTeacher implements vscode.CodeLensProvider {
     private _disposables: vscode.Disposable[] = [];
     private _timeout: NodeJS.Timeout | undefined;
 
-    constructor(private _geminiService: GeminiService) {
+    constructor(private _aiService: IAIService) {
         // Gutter icon decoration (Hoot icon)
         this._decorationType = vscode.window.createTextEditorDecorationType({
             gutterIconPath: vscode.Uri.parse('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI4IiBjeT0iOCIgcj0iNyIgZmlsbD0iIzRmNDZlNSIvPjxwYXRoIGQ9Ik01IDV2Nm02LTZ2Nm0tNi0zaDYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9zdmc+'),
@@ -55,6 +55,12 @@ export class ShadowTeacher implements vscode.CodeLensProvider {
     }
 
     private async _provideShadowHint(editor: vscode.TextEditor) {
+        if (!this._aiService) { return; }
+        
+        // Don't spam if not connected
+        const isConnected = await this._aiService.checkConnection();
+        if (!isConnected) { return; }
+
         const context = await ContextEngine.getContext(editor);
         
         // Get diagnostics at the current line
@@ -87,11 +93,10 @@ export class ShadowTeacher implements vscode.CodeLensProvider {
             "RESPONSE:";
 
         try {
-            const response = await this._geminiService.ask(prompt);
-            const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
-            const data = JSON.parse(jsonStr);
+            const response = await this._aiService.ask(prompt);
+            const data = this._extractJson(response);
             
-            if (data.tease && data.tease !== "NONE" && !response.includes("error")) {
+            if (data && data.tease && data.tease !== "NONE" && !response.includes("error")) {
                 this._currentHint = {
                     line: context.currentLine,
                     tease: data.tease,
@@ -112,6 +117,24 @@ export class ShadowTeacher implements vscode.CodeLensProvider {
         } catch (e) {
             console.error("Shadow hint failed", e);
         }
+    }
+
+    private _extractJson(text: string): any {
+        try {
+            // 1. Try direct parse
+            return JSON.parse(text);
+        } catch {
+            try {
+                // 2. Try to find JSON block
+                const match = text.match(/\{[\s\S]*\}/);
+                if (match) {
+                    return JSON.parse(match[0]);
+                }
+            } catch (e) {
+                console.error("Failed to extract JSON from response", text);
+            }
+        }
+        return null;
     }
 
     public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.CodeLens[] {
